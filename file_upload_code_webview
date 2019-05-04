@@ -1,0 +1,168 @@
+/*
+In NativeScript, a file with the same name as an XML file is known as
+a code-behind file. The code-behind is a great place to place your view
+logic, and to set up your page’s data binding.
+*/
+
+const ChatViewModel = require("./chat-model");
+const view = require("tns-core-modules/ui/core/view");
+const switchModule = require("tns-core-modules/ui/switch");
+const config = require("./config");
+const httpModule = require("http");
+const WebView = require("tns-core-modules/ui/web-view").WebView;
+const webViewModule = require("tns-core-modules/ui/web-view");
+var webViewInterfaceModule = require("nativescript-webview-interface");
+
+var i = 0;
+ 
+const imagepicker = require("nativescript-imagepicker");
+const fs = require("file-system");
+
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+ 
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var MyWebChromeClient = /** @class */ (function (_super) {
+        __extends(MyWebChromeClient, _super);
+        function MyWebChromeClient() {
+            var _this = _super.call(this) || this;
+            return global.__native(_this);
+        }
+        MyWebChromeClient.prototype.onShowFileChooser = function (webView, filePathCallback, fileChooserParams) {
+               console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",filePathCallback);
+               console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",fileChooserParams);
+               this.filepathCallback(filePathCallback);
+               return true;
+        };
+        MyWebChromeClient.prototype.filepathCallback = function (filePathCallback) {
+            console.log("#################################","filepathCallback");
+            var context = imagepicker.create({
+                mode: "single"
+            });
+            //,mediaType: imagepicker.ImagePickerMediaType.Any
+             this.startSelection(context, filePathCallback);  
+        };
+        MyWebChromeClient.prototype.startSelection = function (context, filePathCallback) {
+            var _this = this;
+            context.authorize().then(function () { 
+                return context.present();
+            })
+                .then(function (selection) { 
+                selection.forEach(function (selected) {
+                    var path = selected.android.toString();
+                    console.log("@@@@selection1@@@", path );
+                    var file = fs.File.fromPath(path);
+                    console.log("@@@@selection2@@@", file );
+                    _this.file_path = file.path;
+                    _this.file_path = "file://" + _this.file_path;
+                    console.log("@@@@selection3@@@", _this.file_path );
+                    var results = Array.create(android.net.Uri, 1);
+                    results[0] = android.net.Uri.parse(_this.file_path);
+                    console.log("@@@@selection4@@@", results );
+                    filePathCallback.onReceiveValue(results);
+                    console.log("@@@@selection5@@@" );
+                    i = 1;
+                    return _this.file_path;
+                });
+            }).catch(function (e) {
+                console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",e);
+            });
+        };
+        return MyWebChromeClient;
+    }(android.webkit.WebChromeClient));
+ 
+
+ 
+
+
+
+
+
+function onPageLoaded(args,res) {
+    var page = args.object;
+    view.getViewById(page,"termtext").text = res.post_content;
+    view.getViewById(page,"activityindicator1").style = 'visibility: collapse';
+}
+
+function onNavigatingTo(args) {
+    const page = args.object;
+    page.bindingContext = new ChatViewModel(page);
+}
+
+var LayoutInflater =   android.view.LayoutInflater;
+var View =   android.view.View;
+var mCustomView ;//=   android.view.View;
+var WebChromeClient =   android.webkit.WebChromeClient; 
+var WebViewClient =   android.webkit.WebViewClient;
+
+
+
+function onWebViewLoaded(webargs) { 
+    const page = webargs.object.page;
+    const vm = page.bindingContext;
+    const webview = webargs.object;
+    vm.set("result", "WebView is still loading...");
+    vm.set("enabled", false); 
+
+    webview.on(webViewModule.WebView.loadFinishedEvent, (args) => {
+        let message = "";
+        if (!args.error) {
+            message = `WebView finished loading of ${args.url}`;
+        } else {
+            message = `Error loading ${args.url} : ${args.error}`;
+        }
+
+        vm.set("result", message);
+        console.log(`WebView message - ${message}`);
+    });
+
+ // let webview: WebView = this.webViewRef.nativeElement;
+ if( i == 0 )
+ {
+ let myWebChromeClient = new MyWebChromeClient();
+ webview.android.setWebChromeClient(myWebChromeClient);
+   webview.android.loadUrl("https://fxo.io/m/d6r4bjve"); 
+  }
+ 
+    //   webview.android.getSettings().setJavaScriptEnabled(true);
+    //   webview.android.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
+      
+    //   webview.android.getSettings().setSupportZoom(false);
+    //    webview.android.getSettings().setAllowFileAccess(true);
+    //     webview.android.getSettings().setAllowContentAccess(true);
+    // webview.android.getSettings().setAppCacheEnabled(true);
+    // webview.android.getSettings().setBuiltInZoomControls(true); 
+    // webview.android.getSettings().setDisplayZoomControls(true);
+    // webview.android.getSettings().setSaveFormData(true);
+    //   let myWebChromeClient = new MyWebChromeClient();
+    //   webview.android.setWebChromeClient(myWebChromeClient); 
+    // console.log("1=====================url",url);
+  
+}
+exports.onWebViewLoaded = onWebViewLoaded;
+
+function onWebViewLoaded1(webargs) { 
+    var page = webargs.object.page; 
+    var webview = webargs.object;    
+    //var customViewContainer = view.getViewById('firstFrame'); 
+    var viewr = view;
+
+ 
+page.content = webView;
+
+
+
+}
+exports.onNavigatingTo = onNavigatingTo;
